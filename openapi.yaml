@@ -1,0 +1,608 @@
+openapi: 3.0.0
+info:
+  title: Clayful
+  version: '1.0.0'
+  contact:
+    name: Minsu Lee
+    url: 'https://amond.dev'
+    email: minsu.lee@dietfriends.co.kr
+  description: ''
+servers:
+  - url: 'https://api.clayful.io'
+paths:
+  /v1/products:
+    get:
+      summary: Product List
+      tags:
+        - Product
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+      operationId: get-products
+  /v1/me:
+    get:
+      summary: Get Me
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+      operationId: get-me
+      description: ''
+      security:
+        - AccessToken: []
+        - Customer: []
+    parameters: []
+    put:
+      summary: Update me
+      operationId: update-me
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: |
+            Bad Request
+            duplicated-{{field}}
+            HTTP Status: 400
+            아이디 혹은 이메일 주소가 다른 고객에 의해서 사용중인 경우
+            invalid-field-image
+            HTTP Status: 400
+            설정하려는 이미지가 적합한 모델의 필드에 사용 되지 않은 경우
+            invalid-meta-image
+            HTTP Status: 400
+            메타필드에 설정하려는 이미지가 적합한 사용처를 가지지 않은 경우
+            invalid-model-image
+            HTTP Status: 400
+            설정하려는 이미지가 적합한 모델에 사용 되지 않은 경우
+            invalid-postcode
+            HTTP Status: 400
+            우편번호가 국가 객체에 설정한 형식과 다르거나 잘못된 형식을 지닌 경우
+            not-existing-{{model}}-relation
+            HTTP Status: 400
+            하나 이상의 연관 관계에 있는 모델이 존재하지 않는 경우
+            not-existing-meta-image-relation
+            HTTP Status: 400
+            메타필드에 설정하려는 이미지가 존재하지 않는 경우
+            not-supported-language
+            HTTP Status: 400
+            스토어에서 지원하지 않는 언어를 다국어 필드에 사용하려고 하는 경우
+            postcode-required
+            HTTP Status: 400
+            주소의 우편번호가 제공되지 않은 경우
+      description: ''
+      parameters: []
+      security:
+        - AccessToken: []
+        - Customer: []
+      tags:
+        - Customer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+  /v1/me/products/reviews:
+    post:
+      summary: Write review
+      tags:
+        - Review
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+      operationId: write-review
+      security:
+        - AccessToken: []
+        - Customer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+components:
+  schemas:
+    Price:
+      title: Price
+      type: object
+      properties:
+        raw:
+          type: integer
+          format: int32
+        convertedRaw:
+          type: integer
+          format: int32
+        formatted:
+          type: string
+        converted:
+          type: string
+    ProductPrice:
+      title: ProductPrice
+      type: object
+      x-tags:
+        - Product
+      properties:
+        ordinal:
+          $ref: '#/components/schemas/Price'
+        sale:
+          $ref: '#/components/schemas/Price'
+    Discount:
+      title: Discount
+      type: object
+      properties:
+        type:
+          type: string
+        value:
+          type: string
+        discounted:
+          $ref: '#/components/schemas/Price'
+    Shipping:
+      title: Shipping
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+    ProductShipping:
+      title: ProductShipping
+      type: object
+      x-tags:
+        - Product
+      properties:
+        methods:
+          type: array
+          items:
+            $ref: '#/components/schemas/Shipping'
+        calculation:
+          type: string
+    NumberValue:
+      title: NumberValue
+      type: object
+      properties:
+        raw:
+          type: integer
+          format: int32
+        formatted:
+          type: string
+        converted:
+          type: string
+    ProductRating:
+      title: ProductRating
+      type: object
+      x-tags:
+        - Product
+      properties:
+        count:
+          $ref: '#/components/schemas/NumberValue'
+        sum:
+          $ref: '#/components/schemas/NumberValue'
+        average:
+          $ref: '#/components/schemas/NumberValue'
+    Image:
+      title: Image
+      type: object
+      properties:
+        _id:
+          type: string
+        url:
+          type: string
+    Product:
+      title: Product
+      type: object
+      x-tags:
+        - Product
+      description: ''
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        summary:
+          type: string
+        description:
+          type: string
+        price:
+          $ref: '#/components/schemas/ProductPrice'
+        discount:
+          $ref: '#/components/schemas/Discount'
+        shipping:
+          $ref: '#/components/schemas/ProductShipping'
+        rating:
+          $ref: '#/components/schemas/ProductShipping'
+        bundled:
+          type: boolean
+        available:
+          type: boolean
+        brand:
+          $ref: '#/components/schemas/Resource'
+        thumbnail:
+          $ref: '#/components/schemas/Image'
+        totalReview:
+          $ref: '#/components/schemas/NumberValue'
+        collections:
+          $ref: '#/components/schemas/Collection'
+        catalogs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Catalog'
+        types:
+          $ref: '#/components/schemas/VariantType'
+        weight:
+          $ref: '#/components/schemas/NumberValue'
+        width:
+          $ref: '#/components/schemas/NumberValue'
+        height:
+          $ref: '#/components/schemas/NumberValue'
+        depth:
+          $ref: '#/components/schemas/NumberValue'
+      required:
+        - _id
+        - name
+        - summary
+        - description
+        - price
+    Resource:
+      title: Resource
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+    Collection:
+      title: Collection
+      type: object
+      properties:
+        path:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+    Catalog:
+      title: Catalog
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        image:
+          $ref: '#/components/schemas/Image'
+    Variant:
+      title: Variant
+      type: object
+      properties:
+        price:
+          $ref: '#/components/schemas/ProductPrice'
+        discount:
+          $ref: '#/components/schemas/Discount'
+        available:
+          type: boolean
+        thumbnail:
+          $ref: '#/components/schemas/Image'
+        quantity:
+          $ref: '#/components/schemas/NumberValue'
+        sku:
+          type: string
+      description: ''
+    Option:
+      title: Option
+      type: object
+      properties:
+        name:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        _id:
+          type: string
+    Variation:
+      title: Variation
+      type: object
+      properties:
+        _id:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        value:
+          type: string
+    VariantType:
+      title: VariantType
+      type: object
+      properties:
+        option:
+          $ref: '#/components/schemas/Option'
+        variation:
+          $ref: '#/components/schemas/Variation'
+    Customer:
+      title: Customer
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          $ref: '#/components/schemas/Name'
+        address:
+          $ref: '#/components/schemas/Address'
+        connect:
+          type: boolean
+        verified:
+          type: boolean
+        groups:
+          type: array
+          items:
+            type: object
+        userId:
+          type: string
+        alias:
+          type: string
+        email:
+          type: string
+          format: email
+        avatar:
+          $ref: '#/components/schemas/Image'
+        gender:
+          type: string
+        birthdate:
+          type: string
+        country:
+          type: string
+        mobile:
+          type: string
+          example: 010-1234-5678
+        phone:
+          type: string
+        language:
+          type: string
+        currency:
+          type: string
+        timezone:
+          type: string
+        deactiveatedAt:
+          type: string
+          format: date-time
+        lastLoggedInAt:
+          $ref: '#/components/schemas/TImeValue'
+        meta:
+          type: object
+        createdAt:
+          $ref: '#/components/schemas/TImeValue'
+        updatedAt:
+          $ref: '#/components/schemas/TImeValue'
+      required:
+        - _id
+        - name
+        - connect
+        - verified
+        - userId
+    Name:
+      title: Name
+      type: object
+      properties:
+        first:
+          type: string
+        last:
+          type: string
+        full:
+          type: string
+    CustomerAddress:
+      title: CustomerAddress
+      type: object
+      properties:
+        primary:
+          type: string
+        secondaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerAddress'
+      description: ''
+    TImeValue:
+      title: TImeValue
+      type: object
+      properties:
+        raw:
+          type: string
+          format: date-time
+        formatted:
+          type: string
+        ago:
+          type: string
+    UpdateMeRequest:
+      title: UpdateMeRequest
+      type: object
+      x-tags:
+        - Customer
+      properties:
+        alias:
+          type: string
+        avatar:
+          type: string
+        name:
+          $ref: '#/components/schemas/Name'
+        address:
+          type: object
+          properties:
+            primary:
+              $ref: '#/components/schemas/Address'
+            secondaries:
+              type: array
+              items:
+                $ref: '#/components/schemas/Address'
+        mobile:
+          type: string
+        phone:
+          type: string
+        gender:
+          type: string
+        birthdate:
+          type: string
+        country:
+          type: string
+        language:
+          type: string
+        currency:
+          type: string
+        timezone:
+          type: string
+        meta:
+          type: object
+    Address:
+      title: Address
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/Name'
+        company:
+          type: string
+        postcode:
+          type: string
+        country:
+          type: string
+        state:
+          type: string
+        city:
+          type: string
+        address1:
+          type: string
+        address2:
+          type: string
+        mobile:
+          type: string
+        phone:
+          type: string
+      required:
+        - country
+        - address1
+    ReviewRequest:
+      title: ReviewRequest
+      type: object
+      x-tags:
+        - Review
+      properties:
+        product:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        rating:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 5
+        meta:
+          type: object
+    Review:
+      title: Review
+      type: object
+      x-tags:
+        - Review
+      properties:
+        _id:
+          type: string
+        body:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        rating:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 5
+        totalComment:
+          type: integer
+          format: int32
+        commentedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+        product:
+          type: string
+        title:
+          type: string
+        customer:
+          type: string
+        meta:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ReviewHelped:
+      title: ReviewHelped
+      type: object
+      x-tags:
+        - Review
+      properties:
+        up:
+          type: integer
+          default: 0
+          format: int32
+        down:
+          type: integer
+          default: 0
+          format: int32
+        value:
+          type: integer
+          default: 0
+          format: int32
+        total:
+          type: integer
+          default: 0
+          format: int32
+      required:
+        - up
+        - down
+        - value
+        - total
+      description: ''
+    ReviewFlagged:
+      title: ReviewFlagged
+      type: object
+      x-tags:
+        - Review
+      properties:
+        value:
+          type: integer
+          default: 0
+          format: int32
+  securitySchemes:
+    AccessToken:
+      name: Authorization
+      type: apiKey
+      in: header
+      description: 'Bearer <api-access-token>'
+    Customer:
+      name: Authorization-Customer
+      type: apiKey
+      in: header

@@ -1,0 +1,47 @@
+name: sdk
+
+on:
+  push:
+    #paths:
+    #  - 'oas.yaml'
+    branches:
+      - master
+jobs:
+  build:
+    name: dart sdk
+    runs-on: ubuntu-latest
+
+    #container:
+    #  image:  google/dart:latest
+
+    if: "! contains(github.event.head_commit.message, '[codegen skip]') && ! contains(github.event.head_commit.message, '[skip codegen]')"
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: git config user.name "GitHub Actions" && git config user.email "actions@users.noreply.github.com"
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '1.8'
+      - name: gen
+        run: |
+          rm -rf lib/api
+          rm -rf lib/model
+          rm lib/*.dart
+          tools/generate.sh
+          /usr/lib/dart/bin/dartfmt -w lib
+      # cp lib/custom/export/* lib/model
+      - name: 'install dep'
+        run: |
+          /usr/lib/dart/bin/pub get
+      - name: built_value codegen
+        run: |
+          /usr/lib/dart/bin/pub run build_runner build --delete-conflicting-outputs
+      - name: bump version
+        run: |
+          perl -i -pe 's/^(version:\s+)(\d+\.\d+\.\d+\+)(\d+)$/$1.$ENV{API_VERSION}."+".$ENV{GITHUB_RUN_NUMBER}/e' pubspec.yaml
+      - name: Git push
+        run: |
+          git checkout master
+          git add .
+          git commit -m "Automatic Code Generator" -m "[skip codegen]" || true
+          git push origin master
